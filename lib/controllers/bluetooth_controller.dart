@@ -6,24 +6,22 @@ class BluetoothController extends GetxController {
 
   // To scan devices for Bluetooth connection
   void scanDevices() async {
+    isScanning = true;
+    update(); // Notify listeners to show loader
     FlutterBluePlus.startScan(
       timeout: const Duration(seconds: 5),
-    ).then((_) {
-      // After the scan completes, set isScanning to false and update the UI.
-      isScanning = false;
-      update(); // Notify listeners to rebuild the UI and hide the loader.
-    });
+    );
     FlutterBluePlus.scanResults.listen((results) {
-      // Update your UI or state with the results.
-      // For instance, if using GetX, you can call update() here
+      // This will notify listeners when devices are found
       isScanning = true;
       update(); // This will notify listeners
     });
     // Use a timeout to stop the scan after a delay.
     await Future.delayed(const Duration(seconds: 5));
 
-    //after the scan we need to stop the scan
     FlutterBluePlus.stopScan();
+    isScanning = false;
+    update(); // Notify listeners to hide loader after scan completes
   }
 
   //now showing all available devices

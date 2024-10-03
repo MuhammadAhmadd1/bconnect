@@ -28,7 +28,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(
-                  height: 20,
+                  height: 90,
                 ),
                 Center(
                   child: ElevatedButton(
@@ -36,7 +36,7 @@ class HomeScreen extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       foregroundColor: Colors.white,
                       backgroundColor: Colors.green,
-                      minimumSize: const Size(150, 50),
+                      minimumSize: const Size(250, 50),
                       shape: const BeveledRectangleBorder(
                         borderRadius: BorderRadius.all(
                           Radius.circular(2),
@@ -49,8 +49,8 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
-                    if (controller.isScanning)
+                const SizedBox(height: 150),
+                if (controller.isScanning)
                   Center(
                     child: LoadingAnimationWidget.inkDrop(
                       color: Colors.green,
@@ -58,60 +58,52 @@ class HomeScreen extends StatelessWidget {
                     ),
                   )
                 else
-                const SizedBox(height: 20),
-                StreamBuilder<List<ScanResult>>(
-                  // Listening to the stream of scan results provided by the controller
-                  stream: controller.scanResults,
-                  // The builder function to construct the UI based on the snapshot data
-                  builder: (context, snapshot) {
-                    // Check if the snapshot contains data
-                    if (snapshot.hasData) {
-                      return ListView.builder(
-                        // Allow the ListView to take only the space it needs
-                        shrinkWrap: true,
-                        // Set the number of items to the length of the data in the snapshot
-                        itemCount: snapshot.data!.length,
-                        // Callback to build each item in the ListView
-                        itemBuilder: (context, index) {
-                          final data = snapshot.data![index];
-                          return Card(
-                            elevation: 2,
-                            child: ListTile(
-                              //By using platformName,
-                              //you can ensure that your app behaves appropriately across different devices and platforms.
-                              // Displays the platform name of the device as the main title.
-                              title: Text(
-                                data.device.platformName,
-                                style: const TextStyle(color: Colors.black),
+                  StreamBuilder<List<ScanResult>>(
+                    stream: controller.scanResults,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.active &&
+                          snapshot.hasData &&
+                          snapshot.data!.isNotEmpty) {
+                        return ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: snapshot.data!.length,
+                          itemBuilder: (context, index) {
+                            final data = snapshot.data![index];
+                            return Card(
+                              elevation: 2,
+                              child: ListTile(
+                                title: Text(
+                                  data.device.platformName,
+                                  style: const TextStyle(color: Colors.black),
+                                ),
+                                subtitle: Text(
+                                  data.device.remoteId.str,
+                                  style: const TextStyle(color: Colors.black),
+                                ),
+                                trailing: Text(
+                                  data.rssi.toString(),
+                                  style: const TextStyle(color: Colors.black),
+                                ),
                               ),
-                              // Displays the remote ID of the device as a subtitle.
-                              subtitle: Text(
-                                data.device.remoteId.str,
-                                style: const TextStyle(color: Colors.black),
-                              ),
-                              // Displays the RSSI (Received Signal Strength Indicator) value as trailing text
-                              trailing: Text(
-                                data.rssi.toString(),
-                                style: const TextStyle(color: Colors.black),
-                              ),
+                            );
+                          },
+                        );
+                      } else if (!controller.isScanning && (!snapshot.hasData || snapshot.data!.isEmpty)) {
+                        return const Center(
+                          child: Text(
+                            'No Devices Found',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
                             ),
-                          );
-                        },
-                      );
-                    } else {
-                      return const Center(
-                        child: Text(
-                          'No Devices Found',
-                          style: TextStyle(
-                            color: Colors.green,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
                           ),
-                        ),
-                      );
-                    }
-                  },
-                ),
+                        );
+                      } else {
+                        return const SizedBox.shrink();
+                      }
+                    },
+                  ),
               ],
             ),
           );
