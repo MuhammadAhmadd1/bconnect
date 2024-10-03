@@ -2,17 +2,10 @@ import 'package:bconnect/controllers/bluetooth_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
-import 'package:skeletonizer/skeletonizer.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  bool _enable = true;
 
   @override
   Widget build(BuildContext context) {
@@ -38,13 +31,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 20,
                 ),
                 Center(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _enable = !_enable;
-                      });
-                      controller.scanDevices();
-                    },
+                  child: ElevatedButton(
+                    onPressed: () => controller.scanDevices(),
                     style: ElevatedButton.styleFrom(
                       foregroundColor: Colors.white,
                       backgroundColor: Colors.green,
@@ -55,63 +43,53 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                    label: const Text(
+                    child: const Text(
                       'Scan',
                       style: TextStyle(fontSize: 28),
                     ),
-                    icon: Icon(
-                      _enable
-                          ? Icons.hourglass_bottom_rounded
-                          : Icons.hourglass_disabled_outlined,
-                    ),
                   ),
                 ),
+                const SizedBox(height: 20),
+                    if (controller.isScanning)
+                  Center(
+                    child: LoadingAnimationWidget.inkDrop(
+                      color: Colors.green,
+                      size: 50,
+                    ),
+                  )
+                else
                 const SizedBox(height: 20),
                 StreamBuilder<List<ScanResult>>(
                   // Listening to the stream of scan results provided by the controller
                   stream: controller.scanResults,
                   // The builder function to construct the UI based on the snapshot data
                   builder: (context, snapshot) {
-                    // Show skeleton loading state while waiting for scan results
-                    if (snapshot.connectionState == ConnectionState.waiting || _enable) {
-                      return Skeletonizer(
-                        enabled: true,
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: 5, // Skeletons for 5 loading items
-                          itemBuilder: (context, index) {
-                            return const Card(
-                              elevation: 2,
-                              child: ListTile(
-                                leading: Icon(Icons.ac_unit),
-                                title: Text("Loading..."),
-                                subtitle: Text("Loading..."),
-                                trailing: Text("..."),
-                              ),
-                            );
-                          },
-                        ),
-                      );
-                    }
-                    // Check if the snapshot contains data after scanning completes
-                    if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                    // Check if the snapshot contains data
+                    if (snapshot.hasData) {
                       return ListView.builder(
+                        // Allow the ListView to take only the space it needs
                         shrinkWrap: true,
+                        // Set the number of items to the length of the data in the snapshot
                         itemCount: snapshot.data!.length,
+                        // Callback to build each item in the ListView
                         itemBuilder: (context, index) {
                           final data = snapshot.data![index];
                           return Card(
                             elevation: 2,
                             child: ListTile(
-                              leading: const Icon(Icons.bluetooth),
+                              //By using platformName,
+                              //you can ensure that your app behaves appropriately across different devices and platforms.
+                              // Displays the platform name of the device as the main title.
                               title: Text(
                                 data.device.platformName,
                                 style: const TextStyle(color: Colors.black),
                               ),
+                              // Displays the remote ID of the device as a subtitle.
                               subtitle: Text(
                                 data.device.remoteId.str,
                                 style: const TextStyle(color: Colors.black),
                               ),
+                              // Displays the RSSI (Received Signal Strength Indicator) value as trailing text
                               trailing: Text(
                                 data.rssi.toString(),
                                 style: const TextStyle(color: Colors.black),
